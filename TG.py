@@ -101,4 +101,4 @@ while t < T-1e-8:
 k = comm.reduce(0.5*sum(U*U)*(1./N)**3)
 if rank == 0:
     assert round(k - 0.124953117517, 7) == 0
-print('Time: {0}'.format(time.time() - start_time))
+    print('Time: {0}'.format(time.time() - start_time))
