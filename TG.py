@@ -34,3 +34,23 @@ dealias = array((abs(K[0]) < kmax_dealias)*(abs(K[1]) < kmax_dealias)*\
 (abs(K[2]) < kmax_dealias), dtype=bool)
 a = [1./6., 1./3., 1./3., 1./6.]
 b = [0.5, 0.5, 1.0]
+
+def ifftn_mpi(fu, u):
+    Uc_hat[:] = ifft(fu, axis=0)
+    comm.Alltoall([Uc_hat, MPI.DOUBLE_COMPLEX], [U_mpi, MPI.DOUBLE_COMPLEX])
+    Uc_hatT[:] = rollaxis(U_mpi, 1).reshape(Uc_hatT.shape)
+    u[:] = irfft2(Uc_hatT, axes=(1,2))
+    return u
+
+ def fftn_mpi(u, fu):
+     Uc_hatT[:] = rfft2(u, axes=(1,2))
+     U_mpi[:] = rollaxis(Uc_hatT.reshape(Np, num_processes, Np, N/2 + 1), 1)
+     comm.Alltoall([U_mpi, MPI.DOUBLE_COMPLEX], [fu, MPI.DOUBLE_COMPLEX])
+     fu[:] = fft(fu, axis=0)
+     return fu
+
+def Cross(a, b, c):
+    c[0] = fftn_mpi(a[1]*b[2] - a[2]*b[1], c[0])
+    c[1] = fftn_mpi(a[2]*b[0] - a[0]*b[2], c[1])
+    c[2] = fftn_mpi(a[0]*b[1] - a[1]*b[0], c[2])
+    return c
