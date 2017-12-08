@@ -26,7 +26,7 @@ curl = empty((3, Np, N, N))
 kx = fftfreq(N, 1./N)
 kz = kx[:(N/2 + 1)].copy()
 kz[-1] *= -1
-K = array(meshgrid(kx, kx[rank*Np:(rank+1)*Np], ks, indexing='ij'), dtype=int)
+K = array(meshgrid(kx, kx[rank*Np:(rank+1)*Np], kz, indexing='ij'), dtype=int)
 K2 = sum(K*K, 0, dtype=int)
 K_over_K2 = K.astype(float) / where(K2 == 0, 1, K2).astype(float)
 kmax_dealias = 2./3.*(N/2 + 1)
