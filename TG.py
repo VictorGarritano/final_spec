@@ -1,6 +1,7 @@
 from numpy import *
 from numpy.fft import fftfreq,fft,ifft,irfft2,rfft2
 from mpi4py import MPI
+import time
 
 nu=0.000625
 T=0.1
@@ -82,6 +83,7 @@ for i in range(3):
 
 t = 0.0
 tstep = 0
+start_time = time.time()
 while t < T-1e-8:
     t += dt
     tstep += 1
@@ -99,3 +101,4 @@ while t < T-1e-8:
 k = comm.reduce(0.5*sum(U*U)*(1./N)**3)
 if rank == 0:
     assert round(k - 0.124953117517, 7) == 0
+print('Time: {0}'.format(time.time() - start_time))
