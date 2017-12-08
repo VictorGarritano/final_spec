@@ -1,6 +1,6 @@
 from numpy import *
-fromnumpy.fft import fftfreq,fft,ifft,irfft2,rfft2
-frommpi4py import MPI
+from numpy.fft import fftfreq,fft,ifft,irfft2,rfft2
+from mpi4py import MPI
 
 nu=0.000625
 T=0.1
