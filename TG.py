@@ -74,3 +74,28 @@ def computeRHS(dU, rk):
     return dU
 
 U[0] = sin(X[0])*cos(X[1])*cos(X[2])
+U[1] = -cos(X[0])*sin(X[1])*cos(X[2])
+U[2] = 0
+
+for i in range(3):
+    U_hat[i] = fftn_mpi(U[i], U_hat[i])
+
+t = 0.0
+tstep = 0
+while t < T-1e-8:
+    t += dt
+    tstep += 1
+    U_hat1[:] = U_hat0[:] = U_hat
+
+    for rk in range(4):
+        dU = computeRHS(dU, rk)
+        if rk < 3:
+            U_hat[:] = U_hat0 + b[rk]*dt*dU
+        U_hat1[:] += a[rk]*dt*dU
+    U_hat[:] = U_hat1[:]
+    for i in range(3):
+        U[i] = ifftn_mpi(U_hat[i], U[i])
+
+k = comm.reduce(0.5*sum(U*U)*(1./N)**3)
+if rank == 0:
+    assert round(k - 0.124953117517, 7) == 0
