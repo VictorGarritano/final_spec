@@ -54,3 +54,23 @@ def Cross(a, b, c):
     c[1] = fftn_mpi(a[2]*b[0] - a[0]*b[2], c[1])
     c[2] = fftn_mpi(a[0]*b[1] - a[1]*b[0], c[2])
     return c
+
+def Curl(a, c):
+    c[2] = ifftn_mpi(1j*(K[0]*a[1] - K[1]*a[0]), c[2])
+    c[1] = ifftn_mpi(1j*(K[2]*a[0] - K[0]*a[2]), c[1])
+    c[0] = ifftn_mpi(1j*(K[1]*a[2] - K[2]*a[1]), c[0])
+    return c
+
+def computeRHS(dU, rk):
+    if rk > 0:
+        for i in range(3):
+            U[i] = ifftn_mpi(U_hat[i], U[i])
+    curl[:] = Curl(U_hat, curl)
+    dU = Cross(U, curl, dU)
+    dU *= dealias
+    P_hat[:] = sum(dU*K_over_K2, 0, out=P_hat)
+    dU -= P_hat*K
+    dU -= nu*K2*U_hat
+    return dU
+
+U[0] = sin(X[0])*cos(X[1])*cos(X[2])
