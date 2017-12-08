@@ -42,7 +42,7 @@ def ifftn_mpi(fu, u):
     u[:] = irfft2(Uc_hatT, axes=(1,2))
     return u
 
- def fftn_mpi(u, fu):
+def fftn_mpi(u, fu):
      Uc_hatT[:] = rfft2(u, axes=(1,2))
      U_mpi[:] = rollaxis(Uc_hatT.reshape(Np, num_processes, Np, N/2 + 1), 1)
      comm.Alltoall([U_mpi, MPI.DOUBLE_COMPLEX], [fu, MPI.DOUBLE_COMPLEX])
