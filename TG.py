@@ -3,9 +3,13 @@ from numpy.fft import fftfreq,fft,ifft,irfft2,rfft2
 from mpi4py import MPI
 import time
 
+#cython: boundscheck=False
+#cython: wraparound=False
+cimport numpy as np
+
 nu=0.000625
 T=0.1
-dt=0.001
+dt=0.01
 N=2**7
 comm=MPI.COMM_WORLD
 num_processes=comm.Get_size()
@@ -50,6 +54,26 @@ def fftn_mpi(u, fu):
      fu[:] = fft(fu, axis=0)
      return fu
 
+ctypedef np.float64_t real_t
+def cross(np.ndarray[real_t, ndim=4] a,
+            np.ndarray[real_t, ndim=4] b,
+            np.ndarray[real_t, ndim=4] c):
+    cdef unsigned int i, j, k
+    cdef real_t a0, a1, a2, b0, b1, b2
+    for i in xrange(a.shape[1]):
+        for j in xrange(a.shape[2]):
+            for k in xrange(a.shape[3]):
+                a0 = a[0, i, j, k]
+                a1 = a[1, i, j, k]
+                a2 = a[2, i, j, k]
+                b0 = b[0, i, j, k]
+                b1 = b[1, i, j, k]
+                b2 = b[2, i, j, k]
+                c[0, i, j, k] = a1*b2 - a2*b1
+                c[1, i, j, k] = a2*b0 - a0*b2
+                c[2, i, j, k] = a0*b1 - a1*b0
+    return c
+
 def Cross(a, b, c):
     c[0] = fftn_mpi(a[1]*b[2] - a[2]*b[1], c[0])
     c[1] = fftn_mpi(a[2]*b[0] - a[0]*b[2], c[1])
@@ -67,7 +91,7 @@ def computeRHS(dU, rk):
         for i in range(3):
             U[i] = ifftn_mpi(U_hat[i], U[i])
     curl[:] = Curl(U_hat, curl)
-    dU = Cross(U, curl, dU)
+    dU = cross(U, curl, dU)
     dU *= dealias
     P_hat[:] = sum(dU*K_over_K2, 0, out=P_hat)
     dU -= P_hat*K
