@@ -5,7 +5,7 @@ import time
 
 nu=0.000625
 T=0.1
-dt=0.01
+dt=0.001
 N=2**7
 comm=MPI.COMM_WORLD
 num_processes=comm.Get_size()
@@ -74,6 +74,7 @@ def computeRHS(dU, rk):
     dU -= nu*K2*U_hat
     return dU
 
+###################################
 U[0] = sin(X[0])*cos(X[1])*cos(X[2])
 U[1] = -cos(X[0])*sin(X[1])*cos(X[2])
 U[2] = 0
@@ -84,6 +85,8 @@ for i in range(3):
 t = 0.0
 tstep = 0
 start_time = time.time()
+print('running...')
+exit(0)
 while t < T-1e-8:
     t += dt
     tstep += 1
