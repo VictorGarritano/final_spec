@@ -3,10 +3,6 @@ from numpy.fft import fftfreq,fft,ifft,irfft2,rfft2
 from mpi4py import MPI
 import time
 
-#cython: boundscheck=False
-#cython: wraparound=False
-cimport numpy as np
-
 nu=0.000625
 T=0.1
 dt=0.01
@@ -53,26 +49,6 @@ def fftn_mpi(u, fu):
      comm.Alltoall([U_mpi, MPI.DOUBLE_COMPLEX], [fu, MPI.DOUBLE_COMPLEX])
      fu[:] = fft(fu, axis=0)
      return fu
-
-ctypedef np.float64_t real_t
-def cross(np.ndarray[real_t, ndim=4] a,
-            np.ndarray[real_t, ndim=4] b,
-            np.ndarray[real_t, ndim=4] c):
-    cdef unsigned int i, j, k
-    cdef real_t a0, a1, a2, b0, b1, b2
-    for i in xrange(a.shape[1]):
-        for j in xrange(a.shape[2]):
-            for k in xrange(a.shape[3]):
-                a0 = a[0, i, j, k]
-                a1 = a[1, i, j, k]
-                a2 = a[2, i, j, k]
-                b0 = b[0, i, j, k]
-                b1 = b[1, i, j, k]
-                b2 = b[2, i, j, k]
-                c[0, i, j, k] = a1*b2 - a2*b1
-                c[1, i, j, k] = a2*b0 - a0*b2
-                c[2, i, j, k] = a0*b1 - a1*b0
-    return c
 
 def Cross(a, b, c):
     c[0] = fftn_mpi(a[1]*b[2] - a[2]*b[1], c[0])
@@ -129,3 +105,5 @@ k = comm.reduce(0.5*sum(U*U)*(1./N)**3)
 if rank == 0:
     assert round(k - 0.124953117517, 7) == 0
     print('Np {1}, time: {0}'.format(time.time() - start_time, num_processes))
+    with open('log.txt', 'a') as f:
+        f.write('Np {1}, time: {0}\n'.format(time.time() - start_time, num_processes))
